@@ -1,4 +1,15 @@
 #include "monty.h"
+/* Define instruction set (replace this with your actual instruction set) */
+instruction_t instruction_set[] = {
+    {"push", push},
+    {"pall", pall},
+    {"pint", pint},
+    {"pop", pop},
+    {"swap", swap},
+    {"add", add},
+    {"nop", nop},
+    /* Add other opcodes as needed */
+};
 /**
 * main - monty code interpreter
 * @argc: number of arguments
