@@ -13,6 +13,9 @@ typedef struct stack_s
     struct stack_s *next;
 } stack_t;
 
+/* Global variable for the stack */
+stack_t *stack = NULL;
+
 /* Data structure for instruction and its function */
 typedef struct instruction_s
 {

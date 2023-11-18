@@ -7,35 +7,73 @@
 */
 int main(int argc, char *argv[])
 {
-	char *content;
-	FILE *file;
-	size_t size = 0, read_line = 1;
-	stack_t *stack = NULL;
-	unsigned int counter = 0;
+	char *line = NULL, *opcode, *arg;
+    size_t len = 0, read, i;
+    unsigned int line_number = 0;
+    int value, found = 0;
+    FILE *file;
 
-	if (argc != 2)
-	{
-		fprintf(stderr, "USAGE: monty file\n");
-		exit(EXIT_FAILURE);
-	}
+    if (argc != 2)
+    {
+        fprintf(stderr, "USAGE: monty file\n");
+        exit(EXIT_FAILURE);
+    }
 	file = fopen(argv[1], "r");
-	if (!file)
-	{
-		fprintf(stderr, "Error: Can't open file %s\n", argv[1]);
-		exit(EXIT_FAILURE);
-	}
-	while (read_line > 0)
-	{
-		content = NULL;
-		read_line = getline(&content, &size, file);
-		counter++;
-		if (read_line > 0)
-		{
-			execute(content, &stack, counter, file);
-		}
-		free(content);
-	}
-	free_stack(stack);
-	fclose(file);
-	return (0);
+    if (!file)
+    {
+        fprintf(stderr, "Error: Can't open file %s\n", argv[1]);
+        exit(EXIT_FAILURE);
+    }
+	while ((read = getline(&line, &len, file)) != -1)
+    {
+        line_number++;
+        /* Remove newline character at the end of the line */
+        if (line[read - 1] == '\n')
+            line[read - 1] = '\0';
+
+        /* Tokenize the line */
+        opcode = strtok(line, " ");
+        if (opcode != NULL)
+        {
+            /* Check if the line is not a comment */
+            if (opcode[0] != '#')
+            {
+                /* Find corresponding function for the opcode and execute it */
+                if (strcmp(opcode, "push") == 0)
+                {
+                   arg = strtok(NULL, " ");
+                    if (arg == NULL || !isdigit(arg[0]))
+                    {
+                        fprintf(stderr, "L%u: usage: push integer\n", line_number);
+                        exit(EXIT_FAILURE);
+                    }
+                    value = atoi(arg);
+                    push(&stack, value);
+                }
+                else
+                {
+                    for (i = 0; i < sizeof(instruction_set) / sizeof(instruction_set[0]); i++)
+                    {
+                        if (strcmp(opcode, instruction_set[i].opcode) == 0)
+                        {
+                            instruction_set[i].f(&stack, line_number);
+                            found = 1;
+                            break;
+                        }
+                    }
+                    if (!found)
+                    {
+                        fprintf(stderr, "L%u: unknown instruction %s\n", line_number, opcode);
+                        exit(EXIT_FAILURE);
+                    }
+                }
+            }
+        }
+    }
+
+    free(line);
+    fclose(file);
+    free_stack(stack);
+
+    return (EXIT_SUCCESS);
 }
